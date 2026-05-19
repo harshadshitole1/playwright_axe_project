@@ -1,0 +1,59 @@
+pipeline {
+  agent any
+  environment {
+    BASE_URL = 'https://www.hollandamerica.com/en'
+    EMAIL_USER = credentials('email-user')
+    EMAIL_PASS = credentials('email-pass')
+    DEV_EMAIL = 'developer@example.com'
+    TEAMS_WEBHOOK = credentials('teams-webhook')
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/your-org/playwright-axe-project.git'
+      }
+    }
+    stage('Install Dependencies') {
+      steps {
+        sh 'npm install'
+      }
+    }
+    stage('Run Accessibility Tests') {
+      steps {
+        sh 'npx playwright test'
+      }
+    }
+    stage('Publish Reports') {
+      steps {
+        archiveArtifacts artifacts: 'reports/**/*', fingerprint: true
+      }
+    }
+    stage('Notify MS Teams') {
+      steps {
+        script {
+          def reportUrl = "${env.BUILD_URL}artifact/reports/html/"
+          def status = currentBuild.currentResult
+          def emoji = (status == "SUCCESS") ? "✅" : "🚨"
+
+          office365ConnectorSend webhookUrl: "${TEAMS_WEBHOOK}",
+            status: status,
+            message: """
+            ${emoji} Accessibility Test Results
+            • Status: ${status}
+            • Build: ${env.BUILD_NUMBER}
+            • Reports: [View HTML Reports](${reportUrl})
+            """
+        }
+      }
+    }
+  }
+  post {
+    failure {
+      script {
+        office365ConnectorSend webhookUrl: "${TEAMS_WEBHOOK}",
+          status: "FAILURE",
+          message: "🚨 Accessibility tests failed. Please check Jenkins reports."
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+image: mcr.microsoft.com/playwright:v1.45.0-jammy
+
+pipelines:
+  branches:
+    dev:
+      - step:
+          name: Run Accessibility Tests - DEV
+          caches:
+            - node
+          script:
+            - export BASE_URL=$BASE_URL_DEV
+            - echo $BASE_URL_DEV
+            - echo "Installing dependencies..."
+            - npm ci
+            - echo "Installing Playwright browsers..."
+            - npx playwright install --with-deps
+            - echo "Running Playwright + axe tests..."
+            - npx playwright test
+          artifacts:
+            - playwright-report/**
+            - reports/**
+            - artifacts/**
+
+    qa:
+      - step:
+          name: Run Accessibility Tests - QA
+          caches:
+            - node
+          script:
+            - export BASE_URL=$BASE_URL_QA
+            - echo $BASE_URL_QA
+            - echo "Installing dependencies..."
+            - npm ci
+            - echo "Installing Playwright browsers..."
+            - npx playwright install --with-deps
+            - echo "Running Playwright + axe tests..."
+            - npx playwright test
+          artifacts:
+            - playwright-report/**
+            - reports/**
+            - artifacts/**
+
+
+    staging:
+      - step:
+          name: Run Accessibility Tests - STAGING
+          caches:
+            - node
+          script:
+            - export BASE_URL=$BASE_URL_STAGING
+            - echo $BASE_URL_STAGING
+            - echo "Installing dependencies..."
+            - npm ci
+            - echo "Installing Playwright browsers..."
+            - npx playwright install --with-deps
+            - echo "Running Playwright + axe tests..."
+            - npx playwright test
+          artifacts:
+            - playwright-report/**
+            - reports/**
+            - artifacts/**
+
+    main:
+      - step:
+          name: Run Accessibility Tests - PROD
+          caches:
+            - node
+          script:
+            - export BASE_URL=$BASE_URL_PROD
+            - echo $BASE_URL_PROD
+            - echo "Installing dependencies..."
+            - npm ci
+            - echo "Installing Playwright browsers..."
+            - npx playwright install --with-deps
+            - echo "Running Playwright + axe tests..."
+            - npx playwright test
+          artifacts:
+            - playwright-report/**
+            - reports/**
+            - artifacts/**
